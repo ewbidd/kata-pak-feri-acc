@@ -115,8 +115,7 @@ uint8_t brightness = 255;
 uint8_t volume = 80;    // 0-100%
 uint8_t ledMode = 0;    // 0=Off, 1=On, 2=Blink, 3=Breath
 uint8_t sleepTimer = 0; // 0=Off, 1=1min, 2=5min, 3=10min
-uint8_t motorCalibration[4] = {255, 255, 255,
-                               255}; // FL, FR, BL, BR (speed 10-255)
+uint8_t motorCalibration[4] = {255, 255, 255, 255}; // FL, FR, BL, BR (speed 10-255)
 
 const char *ledModeNames[] = {"Off", "On", "Blink", "Breath"};
 const char *sleepTimerNames[] = {"Off", "1 min", "5 min", "10 min"};
@@ -133,17 +132,13 @@ struct ButtonState {
 ButtonState btnUp, btnDown, btnOk;
 
 // Menu items
-const char *mainMenuItems[] = {"Mecanum Mode", "RC Mode", "Voice Mode",
-                               "Settings"};
+const char *mainMenuItems[] = {"Mecanum Mode", "RC Mode", "Voice Mode", "Settings"};
 const uint8_t mainMenuCount = 4;
-
 const char *settingsMenuItems[] = {"Brightness",  "Volume",     "LED Mode",
                                    "Sleep Timer", "Motor Test", "Calibration",
                                    "About",       "Save & Exit"};
 const uint8_t settingsMenuCount = 8;
-
-const char *motorNames[] = {"Front Left", "Front Right", "Back Left",
-                            "Back Right", "All Motors"};
+const char *motorNames[] = {"Front Left", "Front Right", "Back Left", "Back Right", "All Motors"};
 
 // ============================================================
 // SETUP
@@ -308,9 +303,9 @@ void handleMainMenu(ButtonEvent event) {
     drawMainMenu();
     break;
 
-  case ButtonEvent::OK_SINGLE:
-    enterMode(menuIndex);
-    break;
+  // case ButtonEvent::OK_SINGLE:
+  //   enterMode(menuIndex);
+  //   break;
 
   case ButtonEvent::OK_LONG:
     // Quick settings access
@@ -711,7 +706,7 @@ void drawMainMenu() {
 
   // Footer hint
   display.setCursor(0, 56);
-  display.print("OK:Sel  2xOK:Back");
+  display.print("OK:Select");
 
   display.display();
 }
@@ -730,7 +725,7 @@ void drawModeScreen(const char *title, const char *subtitle) {
   display.setCursor(0, 45);
   display.println("[PLACEHOLDER]");
   display.setCursor(0, 56);
-  display.println("2x OK to go back");
+  display.println("2x OK to back");
 
   display.display();
 }
