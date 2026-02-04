@@ -21,7 +21,6 @@ Proyek ini adalah sistem robot RC berbasis ESP32-S3 menggunakan protokol ESP-NOW
 |----------|-----------|-----|
 | **Master (Robot)** | Robot 4WD dengan Mecanum wheel, OLED, buzzer, buttons | ESP32-S3 |
 | **Transmitter (Remote)** | Remote dengan 2 joystick analog | ESP32-S3 |
-| **Receiver (Slave)** | Alternatif receiver untuk ESP32 standar | ESP32 |
 
 ---
 
