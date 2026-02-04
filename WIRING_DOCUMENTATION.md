@@ -19,8 +19,8 @@ Proyek ini adalah sistem robot RC berbasis ESP32-S3 menggunakan protokol ESP-NOW
 
 | Komponen | Deskripsi | MCU |
 |----------|-----------|-----|
-| **Master (Robot)** | Robot 4WD dengan Mecanum wheel, OLED, buzzer, buttons | ESP32-S3 |
-| **Transmitter (Remote)** | Remote dengan 2 joystick analog | ESP32-S3 |
+| **Master (RC)** | Robot 4WD dengan Mecanum wheel, OLED, buzzer, buttons | ESP32-S3 |
+| **Slave (Remote)** | Remote dengan 1 joystick analog & Mic INMP441 | ESP32-S3 |
 
 ---
 
@@ -28,14 +28,14 @@ Proyek ini adalah sistem robot RC berbasis ESP32-S3 menggunakan protokol ESP-NOW
 
 ```
 ┌─────────────────────┐                    ┌─────────────────────┐
-│    TRANSMITTER      │     ESP-NOW        │      MASTER         │
+│     SLAVE           │     ESP-NOW        │      MASTER         │
 │    (Remote)         │ ◄────────────────► │      (Robot)        │
 │                     │                    │                     │
-│  • 2x Joystick      │                    │  • 4x Motor (L298N) │
-│  • MPU6050 (opt)    │                    │  • OLED Display     │
-│  • INMP441 (opt)    │                    │  • Buzzer           │
-│  • LED Status       │                    │  • 3x Button        │
-│                     │                    │  • LED Status       │
+│  • 1 Joystick       │                    │  • 4 Motor (2 L298N)│
+│  • INMP441 (mic)    │                    │  • OLED Display     │
+│  • 3x Button        │                    │  • Buzzer           │
+│  • LCD Display      │                    │  • 3x Button        │
+│  • 2x Battery 18650 │                    │  • 3x Battery 18650 │
 └─────────────────────┘                    └─────────────────────┘
 ```
 
@@ -60,12 +60,11 @@ Proyek ini adalah sistem robot RC berbasis ESP32-S3 menggunakan protokol ESP-NOW
 | **15** | Direction (IN3) | Motor Back Right | L298N Belakang |
 | **8** | Direction (IN4) | Motor Back Right | L298N Belakang |
 | **9** | I2C SDA | OLED Display | SSD1306 |
-| **10** | I2C SCL | OLED Display | SSD1306 |
+| **10** | I2C SCK | OLED Display | SSD1306 |
 | **11** | PWM | Buzzer | Active/Passive |
 | **12** | Input (Pull-up) | Button UP | Navigation |
 | **13** | Input (Pull-up) | Button DOWN | Navigation |
 | **38** | Input (Pull-up) | Button OK | Select/Back |
-| **48** | Output | LED Status | Built-in LED |
 
 ### 🎮 Motor Driver L298N - DEPAN
 
@@ -157,19 +156,9 @@ Proyek ini adalah sistem robot RC berbasis ESP32-S3 menggunakan protokol ESP-NOW
     Active: LOW (pressed)
 ```
 
-### 💡 LED Status
-
-```
-    LED STATUS
-    ┌────────────┐
-    │ (+) ─────── GPIO48
-    │ (-) ─────── GND (via resistor 220Ω)
-    └────────────┘
-```
-
 ---
 
-## Transmitter (Remote) Wiring
+## Slave (Remote) Wiring
 
 ### 🔌 Pin Summary (ESP32-S3)
 
@@ -204,37 +193,6 @@ Proyek ini adalah sistem robot RC berbasis ESP32-S3 menggunakan protokol ESP-NOW
     Invert: X=false, Y=true
 ```
 
-### 🕹️ Joystick 2 (Kanan - Auxiliary)
-
-```
-    JOYSTICK 2 (KY-023)
-    ┌────────────────┐
-    │ VCC ────────── 3.3V
-    │ GND ────────── GND
-    │ VRx ────────── GPIO4 (Aux X)
-    │ VRy ────────── GPIO5 (Aux Y)
-    │ SW ─────────── GPIO6 (Button)
-    └────────────────┘
-    
-    ADC Resolution: 12-bit (0-4095)
-    Invert: X=true, Y=true
-```
-
-### 📐 MPU6050 (Optional - Hand Gesture Mode)
-
-```
-    MPU6050
-    ┌────────────────┐
-    │ VCC ────────── 3.3V
-    │ GND ────────── GND
-    │ SDA ────────── GPIO9
-    │ SCL ────────── GPIO10
-    │ INT ────────── (not connected)
-    └────────────────┘
-    
-    I2C Address: 0x68
-```
-
 ### 🎤 INMP441 Microphone (Optional - Voice Mode)
 
 ```
@@ -253,163 +211,6 @@ Proyek ini adalah sistem robot RC berbasis ESP32-S3 menggunakan protokol ESP-NOW
 
 ---
 
-## ESP-NOW Receiver Wiring
-
-> ⚠️ **PERHATIAN**: Wiring ini khusus untuk `espnow_receiver` (ESP32 standar, bukan S3)
-
-### 🔌 Pin Summary (ESP32 Standard)
-
-| GPIO | Fungsi | Komponen | Catatan |
-|------|--------|----------|---------|
-| **25** | PWM (ENA) | Motor Front Left | L298N #1 |
-| **26** | Direction (IN1) | Motor Front Left | - |
-| **27** | Direction (IN2) | Motor Front Left | - |
-| **14** | PWM (ENB) | Motor Front Right | L298N #1 |
-| **12** | Direction (IN3) | Motor Front Right | - |
-| **13** | Direction (IN4) | Motor Front Right | - |
-| **32** | PWM (ENA) | Motor Rear Left | L298N #2 |
-| **33** | Direction (IN1) | Motor Rear Left | - |
-| **15** | Direction (IN2) | Motor Rear Left | - |
-| **4** | PWM (ENB) | Motor Rear Right | L298N #2 |
-| **16** | Direction (IN3) | Motor Rear Right | - |
-| **17** | Direction (IN4) | Motor Rear Right | - |
-
----
-
-## Sensor Tambahan
-
-### 🔊 Ultrasonic Sensor HC-SR04 (Mode Autonomous)
-
-```
-    HC-SR04
-    ┌────────────────┐
-    │ VCC ────────── 5V
-    │ GND ────────── GND
-    │ TRIG ───────── GPIO2 (autnomus.ino) / GPIO11 (object_avoid.ino)
-    │ ECHO ───────── GPIO9 (autnomus.ino) / GPIO38 (object_avoid.ino)
-    └────────────────┘
-```
-
-### 🔄 Servo (Mode Autonomous)
-
-```
-    SERVO
-    ┌────────────────┐
-    │ VCC ────────── 5V
-    │ GND ────────── GND
-    │ Signal ─────── GPIO6 (autnomus.ino) / GPIO13 (object_avoid.ino)
-    └────────────────┘
-```
-
-### 🔋 Battery Monitor (Mode Autonomous)
-
-```
-    VOLTAGE DIVIDER
-    ┌────────────────────────────────┐
-    │                                │
-    │ Battery 12V ──┬── R1 (100K)    │
-    │               │                │
-    │               ├──────── GPIO10 │
-    │               │                │
-    │ GND ─────────┴── R2 (10K)     │
-    │                                │
-    └────────────────────────────────┘
-```
-
----
-
-## ⚠️ KONFLIK & PERBEDAAN WIRING
-
-### 🔴 KONFLIK KRITIS
-
-#### 1. **OLED I2C Pin - Konflik Antara File Test dan File Utama**
-
-| File | SDA | SCL |
-|------|-----|-----|
-| `mini_os_v1/main/config.h` | GPIO9 | GPIO10 |
-| `mini_os/common/config.h` | GPIO9 | GPIO10 |
-| `master_wiring_test.ino` | GPIO9 | GPIO10 |
-| `brightness_test.ino` | GPIO9 | GPIO10 |
-| `led_test.ino` | GPIO9 | GPIO10 |
-| **`joystick_test.ino`** ⚠️ | **GPIO8** | **GPIO9** |
-
-> **❌ KONFLIK**: `joystick_test.ino` menggunakan GPIO8 untuk SDA dan GPIO9 untuk SCL, berbeda dengan semua file lainnya!
-
-#### 2. **ESP-NOW Receiver vs Master - Pin Motor BERBEDA TOTAL**
-
-| Motor | Master (ESP32-S3) | ESP-NOW Receiver (ESP32) |
-|-------|-------------------|--------------------------|
-| FL ENA | GPIO4 | **GPIO25** |
-| FL IN1 | GPIO14 | **GPIO26** |
-| FL IN2 | GPIO21 | **GPIO27** |
-| FR ENB | GPIO5 | **GPIO14** |
-| FR IN3 | GPIO16 | **GPIO12** |
-| FR IN4 | GPIO17 | **GPIO13** |
-| BL ENA | GPIO18 | **GPIO32** |
-| BL IN1 | GPIO19 | **GPIO33** |
-| BL IN2 | GPIO20 | **GPIO15** |
-| BR ENB | GPIO7 | **GPIO4** |
-| BR IN3 | GPIO15 | **GPIO16** |
-| BR IN4 | GPIO8 | **GPIO17** |
-
-> **⚠️ PERHATIAN**: `espnow_receiver` menggunakan pin yang berbeda karena ditujukan untuk **ESP32 standar** (bukan ESP32-S3). Ini BUKAN konflik, tapi perbedaan platform yang disengaja.
-
-#### 3. **Ultrasonic Sensor TRIG/ECHO - Perbedaan Antar Mode**
-
-| File | TRIG | ECHO | Catatan |
-|------|------|------|---------|
-| `autnomus.ino` | GPIO2 | GPIO9 | ⚠️ ECHO bentrok dengan OLED SDA! |
-| `object_avoid.ino` | GPIO11 | GPIO38 | ⚠️ TRIG bentrok dengan Buzzer! |
-
-> **❌ KONFLIK SERIUS**:
-> - `autnomus.ino`: ECHO menggunakan GPIO9 yang juga digunakan untuk OLED SDA
-> - `object_avoid.ino`: TRIG menggunakan GPIO11 yang juga digunakan untuk Buzzer
-
-#### 4. **Servo Pin - Perbedaan Antar Mode**
-
-| File | Servo Pin | Catatan |
-|------|-----------|---------|
-| `autnomus.ino` | GPIO6 | OK |
-| `object_avoid.ino` | GPIO13 | ⚠️ Bentrok dengan Button DOWN! |
-
-> **❌ KONFLIK**: `object_avoid.ino` menggunakan GPIO13 untuk servo, yang juga digunakan untuk Button DOWN pada Master.
-
-#### 5. **Battery Monitor Pin**
-
-| File | Battery ADC Pin | Catatan |
-|------|-----------------|---------|
-| `autnomus.ino` | GPIO10 | ⚠️ Bentrok dengan OLED SCL! |
-
-> **❌ KONFLIK SERIUS**: GPIO10 digunakan untuk battery monitoring padahal juga digunakan untuk OLED I2C SCL.
-
----
-
-### 🟡 PERBEDAAN (Non-Konflik)
-
-#### 1. **Button Configuration - Perbedaan Test vs Production**
-
-| File | BTN_UP | BTN_DOWN | BTN_OK | BTN_BACK |
-|------|--------|----------|--------|----------|
-| `mini_os_v1/main/config.h` | GPIO12 | GPIO13 | GPIO38 | - |
-| `master_ui_test.ino` | GPIO12 | GPIO13 | GPIO38 | - |
-| `joystick_test.ino` | **GPIO4** | **GPIO5** | **GPIO6** | - |
-| `WIRING_GUIDE.md` (lama) | GPIO12 | GPIO13 | GPIO38 | GPIO39 |
-
-> **Catatan**: `joystick_test.ino` menggunakan pin berbeda (GPIO4, 5, 6) - ini mungkin untuk hardware test yang berbeda.
-
-#### 2. **PWM Frequency**
-
-| File | Motor PWM Freq | Catatan |
-|------|----------------|---------|
-| `mini_os_v1/main/config.h` | 5000 Hz | |
-| `autnomus.ino` | 20000 Hz | |
-| `rc.ino` | 20000 Hz | |
-| `rc_mecanum.ino` | 20000 Hz | |
-| `master_wiring_test.ino` | 20000 Hz | |
-
-> **Catatan**: mini_os_v1 menggunakan 5kHz, file lainnya 20kHz. Tidak konflik fisik, tapi perlu konsistensi.
-
----
 
 ## Diagram Koneksi Visual
 
@@ -455,7 +256,7 @@ Proyek ini adalah sistem robot RC berbasis ESP32-S3 menggunakan protokol ESP-NOW
                      └───────────────────────────────────────┘
 ```
 
-### Transmitter Remote - Wiring Overview
+### Slave Remote - Wiring Overview
 
 ```
                      ┌───────────────────────────────────────┐
@@ -495,84 +296,7 @@ Proyek ini adalah sistem robot RC berbasis ESP32-S3 menggunakan protokol ESP-NOW
 
 ---
 
-## Referensi File per Komponen
 
-### Motor Control Files
-
-| File | Path | Target |
-|------|------|--------|
-| `config.h` | `mini_os_v1/main/config.h` | ESP32-S3 Master |
-| `motor.c` | `mini_os_v1/main/drivers/motor.c` | ESP32-S3 Master |
-| `rc.ino` | `rc.ino` | ESP32-S3 Master |
-| `rc_mecanum.ino` | `rc_mecanum/rc_mecanum.ino` | ESP32-S3 Master |
-| `autnomus.ino` | `autnomus.ino` | ESP32-S3 Master |
-| `object_avoid.ino` | `object_avoid/object_avoid.ino` | ESP32-S3 Master |
-| `config.h` | `espnow_receiver/main/config.h` | ESP32 Standard |
-| `motor_control.c` | `espnow_receiver/main/motor_control.c` | ESP32 Standard |
-
-### Display & UI Files
-
-| File | Path | Target |
-|------|------|--------|
-| `display.c` | `mini_os_v1/main/drivers/display.c` | ESP32-S3 Master |
-| `master_ui_test.ino` | `master_ui_test/master_ui_test.ino` | ESP32-S3 Master |
-| `brightness_test.ino` | `brightness_test/brightness_test.ino` | ESP32-S3 Master |
-| `joystick_test.ino` | `joystick_test/joystick_test.ino` | ESP32-S3 (Different pins!) |
-
-### Transmitter Files
-
-| File | Path | Target |
-|------|------|--------|
-| `remote_transmitter.ino` | `remote_transmitter/remote_transmitter.ino` | ESP32-S3 Transmitter |
-| `config.h` | `mini_os/common/config.h` | Shared definitions |
-
----
-
-## 📝 Rekomendasi Perbaikan
-
-### Prioritas Tinggi (Harus Diperbaiki)
-
-1. **Fix `joystick_test.ino`** - Ubah pin I2C agar konsisten:
-   ```cpp
-   // Ubah dari:
-   #define SDA_PIN 8
-   #define SCL_PIN 9
-   // Menjadi:
-   #define SDA_PIN 9
-   #define SCL_PIN 10
-   ```
-
-2. **Fix `autnomus.ino`** - Ubah pin ECHO agar tidak bentrok dengan OLED:
-   ```cpp
-   // Ubah dari:
-   #define ECHO_PIN 9
-   // Menjadi (gunakan pin yang tidak terpakai, misal):
-   #define ECHO_PIN 3  // atau GPIO yang tersedia
-   ```
-
-3. **Fix `autnomus.ino`** - Ubah pin Battery Monitor:
-   ```cpp
-   // Ubah dari:
-   #define BATTERY_PIN 10
-   // Menjadi:
-   #define BATTERY_PIN 1  // atau ADC pin yang tersedia
-   ```
-
-4. **Fix `object_avoid.ino`** - Ubah pin Servo dan TRIG:
-   ```cpp
-   // Servo bentrok dengan Button DOWN
-   // TRIG bentrok dengan Buzzer
-   // Ubah ke pin yang tersedia
-   #define SERVO_PIN 3  // atau GPIO yang tersedia
-   #define TRIG_PIN 2   // atau GPIO yang tersedia
-   ```
-
-### Prioritas Rendah (Konsistensi)
-
-1. **Standarisasi PWM Frequency** - Pilih 5kHz atau 20kHz untuk semua file
-2. **Update `WIRING_GUIDE.md`** - Hapus referensi ke GPIO39 (BTN_BACK) yang tidak lagi digunakan
-
----
 
 ## 📋 Quick Reference Card
 
@@ -599,5 +323,4 @@ LED: GPIO48
 
 ---
 
-*Dokumentasi ini dibuat secara otomatis dengan menganalisis semua file sumber dalam proyek.*
 *Terakhir diperbarui: 2026-02-04*
