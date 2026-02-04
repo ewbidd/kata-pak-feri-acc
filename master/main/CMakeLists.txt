@@ -1,0 +1,23 @@
+idf_component_register(
+    SRCS 
+        "main.c"
+        "fsm.c"
+        "drivers/display.c"
+        "drivers/buttons.c"
+        "drivers/buzzer.c"
+        "drivers/motor.c"
+        "drivers/nvs_storage.c"
+        "comm/espnow_handler.c"
+        "modes/mode_menu.c"
+        "modes/mode_mecanum.c"
+        "modes/mode_rc.c"
+        "modes/mode_voice.c"
+        "modes/mode_settings.c"
+        "ui/ui_common.c"
+    INCLUDE_DIRS 
+        "."
+        "drivers"
+        "comm"
+        "modes"
+        "ui"
+)
